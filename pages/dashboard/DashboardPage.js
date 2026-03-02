@@ -17,6 +17,14 @@ class DashboardPage extends BasePage {
       name: 'What can we help with?',
     })
     this.submitButton = page.getByRole('button', { name: 'Submit' })
+    this.submissionHeading = page.getByRole('heading', {
+      name: 'Submission Received',
+    })
+    this.submissionText = page.getByText('Thank you for your submission!')
+    this.submissionEmailText = page.getByText("We'll be in touch via email")
+    this.submitAnotherButton = page.getByRole('button', {
+      name: 'Submit Another Request',
+    })
   }
 
   async open() {
@@ -46,8 +54,24 @@ class DashboardPage extends BasePage {
     await this.whatWeCanHelpWithInputField.fill(
       'This is an automated test issue description - testing text without upload, please ignore ⚠️ © Ayo.',
     )
+    const [response] = await Promise.all([
+      this.page.waitForResponse(
+        (resp) =>
+          resp.request().method() === 'POST' && resp.url().includes('/support'),
+      ),
+      this.submitButton.click(),
+    ])
 
-    await this.submitButton.click()
+    expect(response.status()).toBe(200)
+    // await this.submitButton.click()
+    await expect(this.submissionHeading).toBeVisible()
+    await expect(this.submissionText).toBeVisible()
+    await expect(this.submissionEmailText).toBeVisible()
+    await expect(this.submitAnotherButton).toBeVisible()
+
+    console.log(
+      'Support form successfully submitted and confirmation view displayed.',
+    )
     console.log('Support form submitted without upload for bug-related issues.')
   }
 }
